@@ -29,7 +29,7 @@
 				<a href="/rentals">Rentals</a>
 			</li>
 			<li aria-current={$page.url.pathname === '/calendar' ? 'page' : undefined}>
-				<a href="/about">Calendar</a>
+				<a href="/calendar">Calendar</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
