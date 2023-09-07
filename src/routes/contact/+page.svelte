@@ -37,7 +37,7 @@
 		<br/>
 		<label>
 			Description
-			<textarea rows="5" cols="60" name="description" placeholder="Tell us about your desired pinball machines, venue info, questions, and feedback!">
+			<textarea rows="5" cols="60" name="description" placeholder="Tell us about your desired pinball machines, etc">
 
 			</textarea>
 		</label>
