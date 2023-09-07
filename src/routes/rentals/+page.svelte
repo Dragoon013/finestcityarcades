@@ -6,8 +6,11 @@
 <div class="text-column">
 	<h1>Rentals</h1>
 
+<<<<<<< HEAD
 	<p>
 		Our business model is simple. $400 per machine per event, $1000 for 3 machines. Contact us directly for pricing or questions
 		about renting more than 3 machines at a time.
 	</p>
+=======
+>>>>>>> 79c6fc5efb5fa7df913ae170d812ccc13e7826c8
 </div>

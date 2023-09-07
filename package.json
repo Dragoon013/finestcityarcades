@@ -33,6 +33,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@vercel/postgres": "^0.4.1",
 		"n": "^9.1.0",
 		"nvm": "0.0.4"
 	}
