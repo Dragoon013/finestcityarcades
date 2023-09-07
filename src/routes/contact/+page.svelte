@@ -18,6 +18,7 @@
 				autocomplete="off"
 			/>
 		</label>
+		<br/>
 		<label>
 			Email
 			<input
@@ -25,6 +26,7 @@
 				autocomplete="off"
 			/>
 		</label>		
+		<br/>
 		<label>
 			Venue
 			<input
@@ -32,12 +34,14 @@
 				autocomplete="off"
 			/>
 		</label>
+		<br/>
 		<label>
 			Description
 			<textarea rows="5" cols="60" name="description" placeholder="Tell us about your desired pinball machines, venue info, questions, and feedback!">
 
 			</textarea>
 		</label>
+		<br/>
 		<input type="submit" value="submit">
 	</form>
 

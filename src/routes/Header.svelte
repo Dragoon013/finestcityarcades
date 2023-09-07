@@ -28,13 +28,10 @@
 			<li aria-current={$page.url.pathname === '/rentals' ? 'page' : undefined}>
 				<a href="/rentals">Rentals</a>
 			</li>
-<<<<<<< HEAD
 			<li aria-current={$page.url.pathname === '/contact' ? 'page' : undefined}>
 				<a href="/contact">Contact Us</a>
-=======
 			<li aria-current={$page.url.pathname === '/calendar' ? 'page' : undefined}>
 				<a href="/calendar">Calendar</a>
->>>>>>> 79c6fc5efb5fa7df913ae170d812ccc13e7826c8
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
