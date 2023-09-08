@@ -42,7 +42,7 @@
 			</textarea>
 		</label>
 		<br/>
-		<input type="submit" value="Submit">
+		<button type="submit">Submit</button>
 	</form>
 
 	<p>
