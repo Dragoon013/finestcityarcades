@@ -1,24 +1,36 @@
 <script>
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
+	  import Carousel from 'svelte-carousel'
+	  import { browser } from '$app/environment';
+	  import star_wars from '$lib/images/star_wars_flyer.png';
+
+
+	let carousel; // for calling methods of the carousel instance
+
 </script>
 
 <svelte:head>
 	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+	<meta name="home" content="The Friendly Flipper site" />
 </svelte:head>
 
 <section>
 	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcome_fallback} alt="Welcome" />
-			</picture>
-		</span>
-
-		to your new<br />SvelteKit app
+		Welcome to the Friendly Flipper
 	</h1>
+	{#if browser}
+	<Carousel
+	  bind:this={carousel}
+	>
+	  <div>
+		<picture>
+		<source srcset={star_wars} type="png" />
+		<img src={star_wars} alt="star_wars" />
+	</picture>
+</div>
+	  <div>2</div>
+	  <div>3</div>
+	</Carousel>
+  {/if}
 </section>
 
 <style>
@@ -32,21 +44,5 @@
 
 	h1 {
 		width: 100%;
-	}
-
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
 	}
 </style>
