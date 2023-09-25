@@ -28,11 +28,11 @@ let carousel; // for calling methods of the carousel instance
                 <source srcset={deadpool} type="png" />
                 <img src={deadpool} alt="deadpool" class="pinball_image" />
             </div>
-            <div>
+            <div class="pinball_slide">
                 <source srcset={star_wars} type="png" />
                 <img src={star_wars} alt="star_wars" class="pinball_image" />
             </div>
-            <div>
+            <div class="pinball_slide">
                 <source srcset={full_house} type="jpeg" />
                 <img src={full_house} alt="full_house" class="pinball_image" />
             </div>
@@ -50,17 +50,11 @@ section {
 }
 
 .pinball_slide {
-    position: relative;
-    padding-top: 60%;
-    width: 100%;
-    user-select: none;
-    overflow: hidden;
+	text-align: center;
+
 }
 
 .pinball_image {
-    background-size: cover;
-    background-position: center;
-	text-align: center;
     height: 500px
 }
 
