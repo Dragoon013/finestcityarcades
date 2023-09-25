@@ -42,7 +42,6 @@ let carousel; // for calling methods of the carousel instance
 
 <style>
 section {
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
