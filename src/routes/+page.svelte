@@ -50,13 +50,19 @@ section {
 }
 
 .pinball_slide {
-    align-items: center;
+    position: relative;
+    padding-top: 60%;
+    width: 100%;
+    user-select: none;
+    overflow: hidden;
 }
 
 .pinball_image {
+    background-size: cover;
+    background-position: center;
+	text-align: center;
     height: 500px
 }
-
 
 h1 {
     width: 100%;
