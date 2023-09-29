@@ -19,6 +19,7 @@ let carousel; // for calling methods of the carousel instance
         <h1>
             Welcome to the Friendly Flipper
         </h1>
+        <p>We rent pinball machines for any and all events in San Diego County</p>
         {#if browser}
         <Carousel
             bind:this={carousel}
