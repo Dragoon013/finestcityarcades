@@ -1,14 +1,14 @@
 <svelte:head>
 	<title>About</title>
-	<meta name="description" content="About this filthy flipper" />
+	<meta name="description" content="About Finest City Pinball" />
 </svelte:head>
 
 <div class="text-column">
-	<h1>About the Filthy Flipper</h1>
+	<h1>About Finest City Pinball</h1>
 
 	<p>
-		The Filthy Flipper is a dream come true. Born out of a love for all things pinball and a serious
-		deficit of pinball machines in North and East San Diego county, The Filthy Flipper aims to 
+		Finest City Pinball is a dream come true. Born out of a love for all things pinball and a serious
+		deficit of pinball machines in North and East San Diego county, Finest City Pinball aims to 
 		provide businesses with the means to give players another reason to visit their establishment.
 	</p>
 

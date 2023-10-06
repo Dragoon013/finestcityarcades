@@ -12,14 +12,15 @@ let carousel; // for calling methods of the carousel instance
 
 <svelte:head>
     <title>Home</title>
-    <meta name="home" content="The Friendly Flipper site" />
+    <meta name="home" content="Finest City Pinball site" />
     </svelte:head>
 
     <section>
         <h1>
-            Welcome to the Friendly Flipper
+            Finest City Pinball
         </h1>
         <p>We rent pinball machines for any and all events in San Diego County</p>
+    <b></b>
         {#if browser}
         <Carousel
             bind:this={carousel}
