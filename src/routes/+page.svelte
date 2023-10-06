@@ -19,12 +19,12 @@ let carousel; // for calling methods of the carousel instance
         <h1>
             Finest City Pinball
         </h1>
-        <p>We rent pinball machines for any and all events in San Diego County</p>
-    <b></b>
+        <p style="text-align: center;">We rent pinball machines for any and all events in San Diego County</p>
         {#if browser}
         <Carousel
             bind:this={carousel}
             autoplay
+            autoplayDuration={5000}
             >
             <div class="pinball_slide">
                 <source srcset={deadpool} type="png" />
@@ -51,12 +51,20 @@ section {
 }
 
 .pinball_slide {
-	text-align: center;
-
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+p {
+    padding-bottom: 2em;
 }
 
 .pinball_image {
-    height: 500px
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
 }
 
 h1 {
