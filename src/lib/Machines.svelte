@@ -1,5 +1,4 @@
 <script>
-	import ms from 'ms';
 	/**
 	 * @type {{id: string, name: string, status: string, image: string, createdAt: string}[]}
 	 */
@@ -13,10 +12,7 @@
 	 * @param {string | number | Date} timestamp
 	 * @param {undefined} [timeOnly]
 	 */
-	function timeAgo(timestamp, timeOnly) {
-		if (!timestamp) return 'never';
-		return `${ms(Date.now() - new Date(timestamp).getTime())}${timeOnly ? '' : ' ago'}`;
-	}
+
 </script>
 
 	<div class="flex items-center justify-between mb-4">
