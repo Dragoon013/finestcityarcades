@@ -7,6 +7,7 @@ async function initialize() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       status VARCHAR (255) NOT NULL,
+      tags text[],
       image VARCHAR(255),
       total_plays int,
       purchase_date date,
@@ -21,13 +22,13 @@ async function initialize() {
 
 	const machines = await Promise.all([
 		sql`
-          INSERT INTO machines (name, status, image)
-          VALUES ('Deadpool Pro', 'Ready', 'https://imgproxy.pinside.com/enWY9KQpheASrQM4Xz1bu_5Q4geuH5Bd0hQpOBMjq6U/rs:fit:2048/q:85/fn:Pinside_archive_2701_2882162/aHR0cHM6Ly9vLnBpbnNpZGUuY29tLzQvOWYvZGQvNDlmZGQ0MDRmZWNkNDY4NWViNDg1MjAxY2RiNWFhNjc5YzdiMjlkNS5qcGc')
+          INSERT INTO machines (name, status, tags, image)
+          VALUES ('Deadpool Pro', 'Ready', '{"marvel", "modern", "ss", "pinball"}','https://imgproxy.pinside.com/enWY9KQpheASrQM4Xz1bu_5Q4geuH5Bd0hQpOBMjq6U/rs:fit:2048/q:85/fn:Pinside_archive_2701_2882162/aHR0cHM6Ly9vLnBpbnNpZGUuY29tLzQvOWYvZGQvNDlmZGQ0MDRmZWNkNDY4NWViNDg1MjAxY2RiNWFhNjc5YzdiMjlkNS5qcGc')
           ;
       `,
 		sql`
-          INSERT INTO machines (name, status, image)
-          VALUES ('Full House', 'Maintenance', 'https://imgproxy.pinside.com/03BANg9G4iIusYkvRO5eHTLice-nIgcErdRoNvH0Xxk/rs:fit:2048/q:85/fn:Pinside_archive_1608_1000487/aHR0cHM6Ly9vLnBpbnNpZGUuY29tL2QvNTAvM2EvZDUwM2ExMGE1ZjIwZjRiMTI2NGQyOTZmNzk3OGI5NzM2ZTUxMTViMy5qcGc')
+          INSERT INTO machines (name, status, tags, image)
+          VALUES ('Full House', 'Maintenance', '{"wild-west", "em", "vintage", "pinball"}', 'https://imgproxy.pinside.com/03BANg9G4iIusYkvRO5eHTLice-nIgcErdRoNvH0Xxk/rs:fit:2048/q:85/fn:Pinside_archive_1608_1000487/aHR0cHM6Ly9vLnBpbnNpZGUuY29tL2QvNTAvM2EvZDUwM2ExMGE1ZjIwZjRiMTI2NGQyOTZmNzk3OGI5NzM2ZTUxMTViMy5qcGc')
           ;
       `
 	]);

@@ -23,10 +23,10 @@
 			</p>
 		</div>
 	</div>
-	<div class="flex w-full">
+	<div class="p-10 grid grid-auto-rows grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-9">
 		{#each machines as machine (machine.id)}
 
-		<div class="card w-96 bg-base-100 shadow-xl">
+		<div class="card overflow-hidden min-w-32 bg-base-100 shadow-lg ">
 			<figure><img src={machine.image} alt={machine.name} /></figure>
 			<div class="card-body">
 			  <h2 class="card-title">{machine.name}</h2>
@@ -36,7 +36,6 @@
 			  </div>
 			</div>
 		  </div>
-		  <div class="divider divider-horizontal"></div>
 		{/each}
 	</div>
 

@@ -85,9 +85,16 @@ button {
 	font-size: inherit;
 	font-family: inherit;
 }
+
 .btn {
 	background-color:#01cbaa;
 	color:black;
+	border-color: #01cbaa;
+}
+
+.btn-primary:hover {
+    border-color: var(--color-bg-1);
+    background-color: var(--color-bg-1);
 }
 
 button:focus:not(:focus-visible) {
