@@ -41,8 +41,11 @@
 	"dependencies": {
 		"@fontsource/alata": "^5.0.8",
 		"@fontsource/roboto": "^5.0.8",
+		"@react-email/render": "^0.0.10",
+		"@sendgrid/mail": "^8.1.0",
 		"@vercel/postgres": "^0.4.1",
 		"n": "^9.1.0",
-		"nvm": "0.0.4"
+		"nvm": "0.0.4",
+		"svelte-email": "^0.0.4"
 	}
 }
