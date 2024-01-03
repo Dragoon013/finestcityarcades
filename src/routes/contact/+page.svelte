@@ -34,7 +34,7 @@
         {/if}
         <br/><br/><br/>
         <p>
-            Reach out to us directly at <a href="mailto:jacob.a.teal@gmail.com">jacob.a.teal@gmail.com</a>.
+            Reach out to us directly at <a href="mailto:contact@finestcitypinball.com">contact@finestcitypinball.com</a>.
         </p>
 
     </div>
