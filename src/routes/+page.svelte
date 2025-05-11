@@ -31,10 +31,6 @@ let carousel; // for calling methods of the carousel instance
                 <img src={deadpool} alt="deadpool" class="pinball_image" />
             </div>
             <div class="pinball_slide">
-                <source srcset={star_wars} type="png" />
-                <img src={star_wars} alt="star_wars" class="pinball_image" />
-            </div>
-            <div class="pinball_slide">
                 <source srcset={full_house} type="jpeg" />
                 <img src={full_house} alt="full_house" class="pinball_image" />
             </div>

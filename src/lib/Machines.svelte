@@ -34,26 +34,6 @@
 				<h2 class="card-title">{machine.name}</h2>
 				<p>This is a description about a pinball machine</p>
 				<div class="card-actions justify-end">
-					<button on:click={() => (isModalOpen = true)} class="btn btn-primary">Reserve Now</button>
-					<div class="modal" class:modal-open={isModalOpen}>
-						<div class="modal-box w-11/12 max-w-5xl">
-							<!-- Calendly inline widget begin -->
-							<form method="dialog">
-								<button on:click={() => (isModalOpen = false)} class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-							  </form>
-							<div
-								class="calendly-inline-widget"
-								data-url="https://calendly.com/jacob-a-teal/pinball-rental?hide_landing_page_details=1"
-								style="min-width:320px; height:600px; padding:20px;"
-							/>
-							<script
-								type="text/javascript"
-								src="https://assets.calendly.com/assets/external/widget.js"
-								async
-							></script>
-							<!-- Calendly inline widget end -->
-						</div>
-					</div>
 				</div>
 			</div>
 		</div>

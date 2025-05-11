@@ -1,7 +1,28 @@
 <script>
-	import { enhance } from '$app/forms';
 	/** @type {import('./$types').ActionData} */
-	export let form;
+	
+	let status = "";
+	const handleSubmit = async data => {
+	  status = 'Submitting...'
+	  const formData = new FormData(data.currentTarget)
+	  const object = Object.fromEntries(formData);
+	  const json = JSON.stringify(object);
+	
+	  const response = await fetch("https://api.web3forms.com/submit", {
+		  method: "POST",
+		  headers: {
+			  "Content-Type": "application/json",
+			  Accept: "application/json",
+		  },
+		  body: json
+	  });
+	  const result = await response.json();
+	  if (result.success) {
+		  console.log(result);
+		  status = result.message || "Success"
+		  data.currentTarget.reset();
+	  }
+	}
 </script>
 
 <svelte:head>
@@ -12,7 +33,8 @@
 <div class="text-column">
 	<h1>Contact Us</h1>
 
-	<form class="my-4" method="POST" action="?/handleSubmit" use:enhance>
+	<form on:submit|preventDefault={handleSubmit} class="my-4">
+		<input type="hidden" name="access_key" value="0fde4008-440c-4627-b92a-0ccda34d5737">
 		<div>
 			<label class="label text-slate-500 mr-4" for="name">Name </label>
 			<input
@@ -40,6 +62,7 @@
 			<textarea
 				class="textarea ring-1 ring-slate-200 focus:outline-none rounded-sm w-full"
 				id="message"
+				name="message"
 				style="color:white"
 				placeholder="# of machines, special requests, date, etc"
 			/>
@@ -48,8 +71,7 @@
 			<button type="submit" class="mt-2 w-1/4 btn px-8 rounded-sm btn-outline">Send</button>
 		</div>
 	</form>
-	{#if form?.success}
-		<p>Message sent successfully! We'll get back to you as soon as possible!</p>
-	{/if}
+	<div>{status}</div>
 	<br /><br /><br />
 </div>
+	
