@@ -43,6 +43,7 @@
 		"@fontsource/roboto": "^5.0.8",
 		"@react-email/render": "^0.0.10",
 		"@sendgrid/mail": "^8.1.0",
+		"@vercel/blob": "^1.1.1",
 		"@vercel/postgres": "^0.4.1",
 		"bcryptjs": "^3.0.2",
 		"cookie": "^1.0.2",

@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { fail, redirect } from '@sveltejs/kit';
+import { uploadImage, deleteImage } from '$lib/imageUpload.js';
 
 export async function load() {
 	try {
@@ -38,7 +39,7 @@ export const actions = {
 		const year_manufactured = data.get('year_manufactured');
 		const machine_type = data.get('machine_type') || 'pinball';
 		const status = data.get('status') || 'available';
-		const image = data.get('image');
+		const imageFile = data.get('image');
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
@@ -51,20 +52,41 @@ export const actions = {
 		}
 
 		try {
+			// First create the machine to get an ID
 			const { rows } = await sql`
 				INSERT INTO machines (
 					name, manufacturer, year_manufactured, machine_type, status, 
-					image, description, initial_cost, purchase_date, current_location_id,
+					description, initial_cost, purchase_date, current_location_id,
 					visible_on_site, featured, location_start_date
 				)
 				VALUES (
 					${name}, ${manufacturer}, ${year_manufactured || null}, ${machine_type}, ${status},
-					${image}, ${description}, ${initial_cost || null}, ${purchase_date || null}, 
+					${description}, ${initial_cost || null}, ${purchase_date || null}, 
 					${current_location_id || null}, ${visible_on_site}, ${featured},
-					${current_location_id ? 'CURRENT_DATE' : null}
+					${current_location_id ? new Date().toISOString().split('T')[0] : null}
 				)
 				RETURNING id
 			`;
+
+			const machineId = rows[0].id;
+			let imageUrl = null;
+
+			// Handle image upload if provided
+			if (imageFile && imageFile instanceof File && imageFile.size > 0) {
+				try {
+					imageUrl = await uploadImage(imageFile, 'machines', machineId);
+					
+					// Update the machine with the image URL
+					await sql`
+						UPDATE machines 
+						SET image_url = ${imageUrl}
+						WHERE id = ${machineId}
+					`;
+				} catch (imageError) {
+					console.error('Error uploading image:', imageError);
+					// Don't fail the entire operation if image upload fails
+				}
+			}
 
 			return { success: true, message: 'Machine created successfully' };
 		} catch (error) {
@@ -81,7 +103,7 @@ export const actions = {
 		const year_manufactured = data.get('year_manufactured');
 		const machine_type = data.get('machine_type');
 		const status = data.get('status');
-		const image = data.get('image');
+		const imageFile = data.get('image');
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
@@ -89,17 +111,57 @@ export const actions = {
 		const visible_on_site = data.get('visible_on_site') === 'on';
 		const featured = data.get('featured') === 'on';
 
+		console.log('Update request data:', {
+			id,
+			name,
+			imageFile: imageFile instanceof File ? `File: ${imageFile.name}` : imageFile,
+			current_location_id
+		});
+
 		if (!id || !name) {
 			return fail(400, { error: 'Machine ID and name are required' });
 		}
 
 		try {
-			// Check if location changed
+			// Get current machine data including existing image and location_start_date
 			const { rows: currentMachine } = await sql`
-				SELECT current_location_id FROM machines WHERE id = ${id}
+				SELECT current_location_id, image_url, location_start_date FROM machines WHERE id = ${id}
 			`;
 
+			if (currentMachine.length === 0) {
+				return fail(404, { error: 'Machine not found' });
+			}
+
 			const locationChanged = currentMachine[0]?.current_location_id != current_location_id;
+			let imageUrl = currentMachine[0]?.image_url;
+			const currentLocationStartDate = currentMachine[0]?.location_start_date;
+
+			// Handle image upload if a new image is provided
+			if (imageFile && imageFile instanceof File && imageFile.size > 0) {
+				try {
+					console.log('Uploading new image for machine:', id);
+					// Delete old image if it exists
+					if (imageUrl) {
+						await deleteImage(imageUrl);
+					}
+					
+					// Upload new image
+					imageUrl = await uploadImage(imageFile, 'machines', id);
+					console.log('Image uploaded successfully:', imageUrl);
+				} catch (imageError) {
+					console.error('Error handling image:', imageError);
+					return fail(500, { error: `Image upload failed: ${imageError.message}` });
+				}
+			}
+
+			console.log('Updating machine with data:', {
+				name,
+				manufacturer,
+				machine_type,
+				status,
+				imageUrl,
+				current_location_id
+			});
 
 			await sql`
 				UPDATE machines SET
@@ -108,22 +170,23 @@ export const actions = {
 					year_manufactured = ${year_manufactured || null},
 					machine_type = ${machine_type},
 					status = ${status},
-					image = ${image},
+					image_url = ${imageUrl},
 					description = ${description},
 					initial_cost = ${initial_cost || null},
 					purchase_date = ${purchase_date || null},
 					current_location_id = ${current_location_id || null},
 					visible_on_site = ${visible_on_site},
 					featured = ${featured},
-					location_start_date = ${locationChanged && current_location_id ? 'CURRENT_DATE' : 'location_start_date'},
+					location_start_date = ${locationChanged && current_location_id ? new Date().toISOString().split('T')[0] : currentLocationStartDate},
 					updated_at = CURRENT_TIMESTAMP
 				WHERE id = ${id}
 			`;
 
+			console.log('Machine updated successfully');
 			return { success: true, message: 'Machine updated successfully' };
 		} catch (error) {
 			console.error('Error updating machine:', error);
-			return fail(500, { error: 'Failed to update machine' });
+			return fail(500, { error: `Failed to update machine: ${error.message}` });
 		}
 	},
 
@@ -136,7 +199,24 @@ export const actions = {
 		}
 
 		try {
+			// Get machine data to clean up image
+			const { rows: machine } = await sql`
+				SELECT image_url FROM machines WHERE id = ${id}
+			`;
+
+			// Delete the machine
 			await sql`DELETE FROM machines WHERE id = ${id}`;
+
+			// Clean up image if it exists
+			if (machine.length > 0 && machine[0].image_url) {
+				try {
+					await deleteImage(machine[0].image_url);
+				} catch (imageError) {
+					console.error('Error deleting image:', imageError);
+					// Don't fail the operation if image cleanup fails
+				}
+			}
+
 			return { success: true, message: 'Machine deleted successfully' };
 		} catch (error) {
 			console.error('Error deleting machine:', error);

@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { uploadImage, validateImageFile } from '$lib/imageUpload.js';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -11,20 +12,68 @@
 	let showAddForm = false;
 	let editingMachine = null;
 	let loading = false;
+	let imageFile = null;
+	let imagePreview = null;
+	let imageError = null;
 
 	function toggleAddForm() {
 		showAddForm = !showAddForm;
 		editingMachine = null;
+		resetImageUpload();
 	}
 
 	function editMachine(machine) {
 		editingMachine = machine;
 		showAddForm = true;
+		resetImageUpload();
+		// Set current image as preview if exists
+		if (machine.image_url) {
+			imagePreview = machine.image_url;
+		}
 	}
 
 	function cancelEdit() {
 		showAddForm = false;
 		editingMachine = null;
+		resetImageUpload();
+	}
+
+	function resetImageUpload() {
+		imageFile = null;
+		imagePreview = null;
+		imageError = null;
+	}
+
+	function handleImageSelect(event) {
+		const file = event.target.files[0];
+		imageError = null;
+		
+		if (!file) {
+			resetImageUpload();
+			return;
+		}
+
+		try {
+			validateImageFile(file);
+			imageFile = file;
+			
+			// Create preview
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				imagePreview = e.target.result;
+			};
+			reader.readAsDataURL(file);
+		} catch (error) {
+			imageError = error.message;
+			resetImageUpload();
+		}
+	}
+
+	function removeImage() {
+		resetImageUpload();
+		// Clear the file input
+		const fileInput = document.getElementById('image');
+		if (fileInput) fileInput.value = '';
 	}
 </script>
 
@@ -65,6 +114,7 @@
 			<form 
 				method="POST" 
 				action={editingMachine ? '?/update' : '?/create'}
+				enctype="multipart/form-data"
 				use:enhance={() => {
 					loading = true;
 					return async ({ result, update }) => {
@@ -194,6 +244,46 @@
 					</div>
 				</div>
 
+				<!-- Image Upload Section -->
+				<div>
+					<label for="image" class="block text-sm font-medium text-gray-700">Machine Image</label>
+					<div class="mt-1 space-y-3">
+						{#if imagePreview}
+							<div class="relative inline-block">
+								<img 
+									src={imagePreview} 
+									alt="Machine preview" 
+									class="h-32 w-32 object-cover rounded-lg border border-gray-300"
+								/>
+								<button
+									type="button"
+									on:click={removeImage}
+									class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+								>
+									×
+								</button>
+							</div>
+						{/if}
+						
+						<input
+							type="file"
+							id="image"
+							name="image"
+							accept="image/*"
+							on:change={handleImageSelect}
+							class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+						/>
+						
+						{#if imageError}
+							<p class="text-sm text-red-600">{imageError}</p>
+						{/if}
+						
+						<p class="text-xs text-gray-500">
+							Upload a JPEG, PNG, or WebP image (max 5MB)
+						</p>
+					</div>
+				</div>
+
 				<div>
 					<label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
 					<textarea
@@ -242,6 +332,9 @@
 						<thead class="bg-gray-50">
 							<tr>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Image
+								</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 									Machine
 								</th>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -267,6 +360,21 @@
 						<tbody class="bg-white divide-y divide-gray-200">
 							{#each data.machines as machine}
 								<tr>
+									<td class="px-6 py-4 whitespace-nowrap">
+										{#if machine.image_url}
+											<img 
+												src={machine.image_url} 
+												alt={machine.name} 
+												class="h-16 w-16 object-cover rounded-lg border border-gray-300"
+											/>
+										{:else}
+											<div class="h-16 w-16 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center">
+												<svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+												</svg>
+											</div>
+										{/if}
+									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
 										<div class="text-sm font-medium text-gray-900">{machine.name}</div>
 										<div class="text-sm text-gray-500">{machine.manufacturer || 'Unknown'} {machine.year_manufactured || ''}</div>
