@@ -8,11 +8,7 @@ config();
 async function fixMachinesSchema() {
 	try {
 		console.log('Starting machines schema fix...');
-		
-		// Load backup data
-		const backupData = JSON.parse(fs.readFileSync('machines-backup.json', 'utf8'));
-		console.log(`Loaded ${backupData.length} machines from backup`);
-		
+	
 		// Add the image_url column if it doesn't exist
 		console.log('Adding image_url column...');
 		try {
@@ -24,18 +20,6 @@ async function fixMachinesSchema() {
 			} else {
 				console.error('Error adding image_url column:', error);
 				throw error;
-			}
-		}
-		
-		// Migrate existing image data to image_url column
-		console.log('Migrating image data...');
-		for (const machine of backupData) {
-			if (machine.image && !machine.image_url) {
-				await sql`
-					UPDATE machines 
-					SET image_url = ${machine.image}
-					WHERE id = ${machine.id}
-				`;
 			}
 		}
 		

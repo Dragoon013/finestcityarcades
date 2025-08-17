@@ -1,5 +1,5 @@
-import { createAdminUser } from './auth.js';
-import { initializeDatabase, seedInitialData } from './db/schema.js';
+import { createAdminUser } from '../auth.js';
+import { initializeDatabase, seedInitialData } from '../db/schema.js';
 
 async function setupAdmin() {
 	try {
