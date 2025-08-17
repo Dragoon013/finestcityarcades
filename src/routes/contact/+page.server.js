@@ -1,9 +1,5 @@
 import Contact from '../../lib/Contact.svelte'
-import sendgrid from '@sendgrid/mail';
-import { SENDGRID_API_KEY } from '$env/static/private';
 import { render } from 'svelte-email';
-
-sendgrid.setApiKey(SENDGRID_API_KEY || "");
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -29,9 +25,7 @@ export const actions = {
           subject: 'FCP contact from '+name,
           html: emailHtml,
         };
-        
-        sendgrid.send(options);
-        
+                
         return { success: true };
 	}
 };
