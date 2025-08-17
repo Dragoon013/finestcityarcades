@@ -1,11 +1,10 @@
 import { sql } from '@vercel/postgres';
-import { initializeDatabase, seedInitialData } from '$lib/db/schema.js';
+import { initializeDatabase } from '$lib/db/schema.js';
 
 export async function load() {
 	try {
 		// Initialize database if needed
 		await initializeDatabase();
-		await seedInitialData();
 
 		// Get dashboard statistics
 		const [machinesStats, locationsStats, revenueStats] = await Promise.all([
