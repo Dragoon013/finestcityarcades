@@ -342,7 +342,7 @@
 						{/if}
 						
 						<p class="text-xs text-gray-500">
-							Upload a JPEG, PNG, or WebP image (max 10MB)
+							Upload a JPEG, PNG, or WebP image (max 15MB)
 						</p>
 					</div>
 				</div>
