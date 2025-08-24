@@ -43,6 +43,8 @@ export const actions = {
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
+		const sale_date = data.get('sale_date');
+		const sale_amount = data.get('sale_amount');
 		const current_location_id = data.get('current_location_id');
 		const visible_on_site = data.get('visible_on_site') === 'on';
 		const display_order = data.get('display_order');
@@ -57,12 +59,14 @@ export const actions = {
 			await sql`
 				INSERT INTO machines (
 					name, manufacturer, year_manufactured, machine_type, status, 
-					description, initial_cost, purchase_date, current_location_id,
-					visible_on_site, display_order, notes, location_start_date, image_url
+					description, initial_cost, purchase_date, sale_date, sale_amount,
+					current_location_id, visible_on_site, display_order, notes, 
+					location_start_date, image_url
 				)
 				VALUES (
 					${name}, ${manufacturer}, ${year_manufactured || null}, ${machine_type}, ${status},
 					${description}, ${initial_cost || null}, ${purchase_date || null}, 
+					${sale_date || null}, ${sale_amount || null},
 					${current_location_id || null}, ${visible_on_site}, ${display_order || 0}, ${notes},
 					${current_location_id ? new Date().toISOString().split('T')[0] : null}, ${imageUrl || null}
 				)
@@ -87,6 +91,8 @@ export const actions = {
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
+		const sale_date = data.get('sale_date');
+		const sale_amount = data.get('sale_amount');
 		const current_location_id = data.get('current_location_id');
 		const visible_on_site = data.get('visible_on_site') === 'on';
 		const display_order = data.get('display_order');
@@ -135,6 +141,8 @@ export const actions = {
 					description = ${description},
 					initial_cost = ${initial_cost || null},
 					purchase_date = ${purchase_date || null},
+					sale_date = ${sale_date || null},
+					sale_amount = ${sale_amount || null},
 					current_location_id = ${current_location_id || null},
 					visible_on_site = ${visible_on_site},
 					display_order = ${display_order || 0},

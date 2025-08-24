@@ -14,18 +14,21 @@ export async function load() {
 
 		// Get current month revenue data
 		const { rows: currentMonthRevenue } = await sql`
-			SELECT 
+			SELECT
 				mr.machine_id,
 				mr.location_id,
+				mr.revenue_date,
 				mr.revenue_amount,
-				mr.plays_count,
+				mr.fca_amount,
+				mr.location_amount,
 				mr.notes,
 				m.name as machine_name,
-				l.name as location_name
+				l.name as location_name,
+				l.contact_name
 			FROM machine_revenue mr
 			JOIN machines m ON mr.machine_id = m.id
 			JOIN locations l ON mr.location_id = l.id
-			WHERE DATE_TRUNC('month', mr.revenue_month) = DATE_TRUNC('month', CURRENT_DATE)
+			WHERE DATE_TRUNC('month', mr.revenue_date) = DATE_TRUNC('month', CURRENT_DATE)
 			ORDER BY l.name, m.name
 		`;
 
@@ -96,23 +99,27 @@ export async function load() {
 export const actions = {
 	addRevenue: async ({ request }) => {
 		const data = await request.formData();
-		const locationId = data.get('location_id');
-		const revenueMonth = data.get('revenue_month');
+		const locationId = data.get('location_id')?.toString();
+		const revenueMonth = data.get('revenue_month')?.toString();
 		const machineRevenues = [];
 
 		// Parse machine revenue data from form
 		for (const [key, value] of data.entries()) {
 			if (key.startsWith('machine_') && key.endsWith('_revenue')) {
 				const machineId = key.replace('machine_', '').replace('_revenue', '');
-				const revenue = parseFloat(value) || 0;
-				const plays = parseInt(data.get(`machine_${machineId}_plays`)) || 0;
-				const notes = data.get(`machine_${machineId}_notes`) || '';
+				const revenue = parseFloat(value.toString()) || 0;
+				const fcaAmount = parseFloat(data.get(`machine_${machineId}_fca`)?.toString() || '0') || 0;
+				const locationAmount = parseFloat(data.get(`machine_${machineId}_location`)?.toString() || '0') || 0;
+				const revenueDate = data.get(`machine_${machineId}_date`)?.toString() || revenueMonth + '-01';
+				const notes = data.get(`machine_${machineId}_notes`)?.toString() || '';
 
 				if (revenue > 0) {
 					machineRevenues.push({
 						machineId: parseInt(machineId),
 						revenue,
-						plays,
+						fcaAmount,
+						locationAmount,
+						revenueDate,
 						notes
 					});
 				}
@@ -128,16 +135,17 @@ export const actions = {
 			for (const machineRev of machineRevenues) {
 				await sql`
 					INSERT INTO machine_revenue (
-						machine_id, location_id, revenue_month, revenue_amount, plays_count, notes
+						machine_id, location_id, revenue_date, revenue_month, revenue_amount, fca_amount, location_amount, notes
 					)
 					VALUES (
-						${machineRev.machineId}, ${locationId}, ${revenueMonth + '-01'}, 
-						${machineRev.revenue}, ${machineRev.plays}, ${machineRev.notes}
+						${machineRev.machineId}, ${locationId}, ${machineRev.revenueDate}, ${revenueMonth + '-01'},
+						${machineRev.revenue}, ${machineRev.fcaAmount}, ${machineRev.locationAmount}, ${machineRev.notes}
 					)
-					ON CONFLICT (machine_id, location_id, revenue_month)
+					ON CONFLICT (machine_id, location_id, revenue_date)
 					DO UPDATE SET
 						revenue_amount = EXCLUDED.revenue_amount,
-						plays_count = EXCLUDED.plays_count,
+						fca_amount = EXCLUDED.fca_amount,
+						location_amount = EXCLUDED.location_amount,
 						notes = EXCLUDED.notes,
 						updated_at = CURRENT_TIMESTAMP
 				`;

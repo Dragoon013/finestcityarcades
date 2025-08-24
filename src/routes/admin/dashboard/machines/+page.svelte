@@ -269,6 +269,30 @@
 					</div>
 
 					<div>
+						<label for="sale_date" class="block text-sm font-medium text-gray-700">Sold Date</label>
+						<input
+							type="date"
+							id="sale_date"
+							name="sale_date"
+							value={editingMachine?.sale_date ? new Date(editingMachine.sale_date).toISOString().split('T')[0] : ''}
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						/>
+					</div>
+
+					<div>
+						<label for="sale_amount" class="block text-sm font-medium text-gray-700">Sale Amount ($)</label>
+						<input
+							type="number"
+							id="sale_amount"
+							name="sale_amount"
+							value={editingMachine?.sale_amount || ''}
+							step="0.01"
+							min="0"
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						/>
+					</div>
+
+					<div>
 						<label for="current_location_id" class="block text-sm font-medium text-gray-700">Location</label>
 						<select
 							id="current_location_id"
@@ -540,6 +564,12 @@
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 									Acquired
 								</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Sold Date
+								</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Sale Amount
+								</th>
 								<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
 									Actions
 								</th>
@@ -596,6 +626,12 @@
 									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 										{machine.purchase_date ? new Date(machine.purchase_date).toLocaleDateString() : '-'}
 									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+										{machine.sale_date ? new Date(machine.sale_date).toLocaleDateString() : '-'}
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+										{machine.sale_amount ? `$${parseFloat(machine.sale_amount).toLocaleString()}` : '-'}
+									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 										<button
 											on:click={() => editMachine(machine)}
@@ -603,9 +639,9 @@
 										>
 											Edit
 										</button>
-										<form 
-											method="POST" 
-											action="?/delete" 
+										<form
+											method="POST"
+											action="?/delete"
 											class="inline"
 											use:enhance={() => {
 												return async ({ result, update }) => {

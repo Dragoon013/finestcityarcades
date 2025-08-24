@@ -16,6 +16,7 @@
 	async function loadMachines() {
 		if (!selectedLocation || !selectedMonth) {
 			machines = [];
+			formValues = {}; // Clear form values when no location/month selected
 			return;
 		}
 
@@ -35,13 +36,17 @@
 			if (response.ok) {
 				const result = await response.json();
 				machines = result.machines || [];
+				// Clear form values when machines change to prevent stale data
+				formValues = {};
 			} else {
 				console.error('HTTP error:', response.status, response.statusText);
 				machines = [];
+				formValues = {};
 			}
 		} catch (error) {
 			console.error('Error loading machines:', error);
 			machines = [];
+			formValues = {};
 		} finally {
 			loading = false;
 		}
@@ -61,16 +66,61 @@
 		});
 	}
 
+	// Store form values reactively
+	let formValues = {};
+
 	// Calculate totals for current form
 	$: totalRevenue = machines.reduce((sum, machine) => {
-		const input = document.querySelector(`input[name="machine_${machine.id}_revenue"]`);
-		return sum + (parseFloat(input?.value || machine.current_revenue) || 0);
+		return sum + (parseFloat(formValues[`machine_${machine.id}_revenue`] || machine.current_revenue) || 0);
 	}, 0);
 
-	$: totalPlays = machines.reduce((sum, machine) => {
-		const input = document.querySelector(`input[name="machine_${machine.id}_plays"]`);
-		return sum + (parseInt(input?.value || machine.current_plays) || 0);
+	$: totalFCAAmount = machines.reduce((sum, machine) => {
+		return sum + (parseFloat(formValues[`machine_${machine.id}_fca`] || machine.current_fca) || 0);
 	}, 0);
+
+	$: totalLocationAmount = machines.reduce((sum, machine) => {
+		return sum + (parseFloat(formValues[`machine_${machine.id}_location`] || machine.current_location_amount) || 0);
+	}, 0);
+
+	// Auto-calculate revenue splits when total revenue changes
+	function calculateRevenueSplits(machineId, newRevenueValue) {
+		const machine = machines.find(m => m.id === machineId);
+
+		if (newRevenueValue > 0 && machine?.revenue_split) {
+			const fcaAmount = (newRevenueValue * machine.revenue_split / 100);
+			const locationAmount = newRevenueValue - fcaAmount;
+
+			formValues[`machine_${machineId}_fca`] = fcaAmount.toFixed(2);
+			formValues[`machine_${machineId}_location`] = locationAmount.toFixed(2);
+		}
+	}
+
+	// Handle revenue input changes
+	function handleRevenueChange(event, machineId) {
+		const value = event.target.value;
+		formValues[`machine_${machineId}_revenue`] = value;
+		calculateRevenueSplits(machineId, parseFloat(value) || 0);
+	}
+
+	// Handle manual split adjustments
+	function handleSplitChange(event, machineId, field) {
+		const value = event.target.value;
+		formValues[`machine_${machineId}_${field}`] = value;
+
+		// Update total revenue if splits change
+		const fcaAmount = parseFloat(formValues[`machine_${machineId}_fca`] || 0);
+		const locationAmount = parseFloat(formValues[`machine_${machineId}_location`] || 0);
+		const totalSplit = fcaAmount + locationAmount;
+
+		if (totalSplit !== parseFloat(formValues[`machine_${machineId}_revenue`] || 0)) {
+			formValues[`machine_${machineId}_revenue`] = totalSplit.toFixed(2);
+		}
+	}
+
+	// Handle input changes for all fields
+	function handleInputChange(event, machineId, field) {
+		formValues[`machine_${machineId}_${field}`] = event.target.value;
+	}
 </script>
 
 <svelte:head>
@@ -169,8 +219,10 @@
 									<tr>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Machine</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Type</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Date</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Revenue ($)</th>
-										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Plays</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">FCA</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">{machines[0]?.contact_name || 'Location'}</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</th>
 									</tr>
 								</thead>
@@ -185,11 +237,20 @@
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap">
 												<input
+													type="date"
+													name="machine_{machine.id}_date"
+													value={machine.current_date}
+													class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+												/>
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap">
+												<input
 													type="number"
 													name="machine_{machine.id}_revenue"
-													value={machine.current_revenue}
+													value={formValues[`machine_${machine.id}_revenue`] || machine.current_revenue}
 													step="0.01"
 													min="0"
+													on:input={(e) => handleRevenueChange(e, machine.id)}
 													class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 													placeholder="0.00"
 												/>
@@ -197,18 +258,33 @@
 											<td class="px-6 py-4 whitespace-nowrap">
 												<input
 													type="number"
-													name="machine_{machine.id}_plays"
-													value={machine.current_plays}
+													name="machine_{machine.id}_fca"
+													value={formValues[`machine_${machine.id}_fca`] || machine.current_fca}
+													step="0.01"
 													min="0"
+													on:input={(e) => handleSplitChange(e, machine.id, 'fca')}
 													class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-													placeholder="0"
+													placeholder="0.00"
+												/>
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap">
+												<input
+													type="number"
+													name="machine_{machine.id}_location"
+													value={formValues[`machine_${machine.id}_location`] || machine.current_location_amount}
+													step="0.01"
+													min="0"
+													on:input={(e) => handleSplitChange(e, machine.id, 'location')}
+													class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+													placeholder="0.00"
 												/>
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap">
 												<input
 													type="text"
 													name="machine_{machine.id}_notes"
-													value={machine.current_notes}
+													value={formValues[`machine_${machine.id}_notes`] || machine.current_notes}
+													on:input={(e) => handleInputChange(e, machine.id, 'notes')}
 													class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 													placeholder="Optional notes..."
 												/>
@@ -218,9 +294,10 @@
 								</tbody>
 								<tfoot class="bg-gray-50">
 									<tr>
-										<td colspan="2" class="px-6 py-3 text-sm font-medium text-gray-900">Totals:</td>
+										<td colspan="3" class="px-6 py-3 text-sm font-medium text-gray-900">Totals:</td>
 										<td class="px-6 py-3 text-sm font-medium text-gray-900">{formatCurrency(totalRevenue)}</td>
-										<td class="px-6 py-3 text-sm font-medium text-gray-900">{totalPlays}</td>
+										<td class="px-6 py-3 text-sm font-medium text-gray-900">{formatCurrency(totalFCAAmount)}</td>
+										<td class="px-6 py-3 text-sm font-medium text-gray-900">{formatCurrency(totalLocationAmount)}</td>
 										<td class="px-6 py-3"></td>
 									</tr>
 								</tfoot>
