@@ -15,6 +15,8 @@
 	let imageFile = null;
 	let imagePreview = null;
 	let imageError = null;
+	let uploadedImageUrl = null;
+	let uploading = false;
 
 	// Filter and sort variables
 	let filterType = '';
@@ -78,9 +80,10 @@
 		imageFile = null;
 		imagePreview = null;
 		imageError = null;
+		uploadedImageUrl = null;
 	}
 
-	function handleImageSelect(event) {
+	async function handleImageSelect(event) {
 		const file = event.target.files[0];
 		imageError = null;
 		
@@ -96,11 +99,23 @@
 			// Create preview
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				imagePreview = e.target.result;
+				imagePreview = e.target?.result;
 			};
 			reader.readAsDataURL(file);
+
+			// Upload image immediately
+			uploading = true;
+			try {
+				const machineId = editingMachine?.id || 'temp';
+				uploadedImageUrl = await uploadImage(file, 'machines', machineId);
+			} catch (uploadError) {
+				imageError = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+				uploadedImageUrl = null;
+			} finally {
+				uploading = false;
+			}
 		} catch (error) {
-			imageError = error.message;
+			imageError = error instanceof Error ? error.message : 'Validation failed';
 			resetImageUpload();
 		}
 	}
@@ -167,6 +182,11 @@
 			>
 				{#if editingMachine}
 					<input type="hidden" name="id" value={editingMachine.id} />
+				{/if}
+				
+				<!-- Hidden field for uploaded image URL -->
+				{#if uploadedImageUrl}
+					<input type="hidden" name="image_url" value={uploadedImageUrl} />
 				{/if}
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,12 +357,19 @@
 							class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
 						/>
 						
-						{#if imageError}
+						{#if uploading}
+							<div class="flex items-center space-x-2">
+								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+								<p class="text-sm text-indigo-600">Uploading image...</p>
+							</div>
+						{:else if uploadedImageUrl}
+							<p class="text-sm text-green-600">✓ Image uploaded successfully</p>
+						{:else if imageError}
 							<p class="text-sm text-red-600">{imageError}</p>
 						{/if}
 						
 						<p class="text-xs text-gray-500">
-							Upload a JPEG, PNG, or WebP image (max 15MB)
+							Upload a JPEG, PNG, or WebP image (max 15MB). Large files are supported with client-side upload.
 						</p>
 					</div>
 				</div>

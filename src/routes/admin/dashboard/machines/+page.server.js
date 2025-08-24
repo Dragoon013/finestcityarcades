@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { fail, redirect } from '@sveltejs/kit';
-import { uploadImage, deleteImage } from '$lib/imageUpload.js';
+import { deleteImage } from '$lib/imageUpload.js';
 
 export async function load() {
 	try {
@@ -39,7 +39,7 @@ export const actions = {
 		const year_manufactured = data.get('year_manufactured');
 		const machine_type = data.get('machine_type') || 'pinball';
 		const status = data.get('status') || 'available';
-		const imageFile = data.get('image');
+		const imageUrl = data.get('image_url'); // Now we receive the URL from client-side upload
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
@@ -53,41 +53,20 @@ export const actions = {
 		}
 
 		try {
-			// First create the machine to get an ID
-			const { rows } = await sql`
+			// Create the machine with the image URL
+			await sql`
 				INSERT INTO machines (
 					name, manufacturer, year_manufactured, machine_type, status, 
 					description, initial_cost, purchase_date, current_location_id,
-					visible_on_site, display_order, notes, location_start_date
+					visible_on_site, display_order, notes, location_start_date, image_url
 				)
 				VALUES (
 					${name}, ${manufacturer}, ${year_manufactured || null}, ${machine_type}, ${status},
 					${description}, ${initial_cost || null}, ${purchase_date || null}, 
 					${current_location_id || null}, ${visible_on_site}, ${display_order || 0}, ${notes},
-					${current_location_id ? new Date().toISOString().split('T')[0] : null}
+					${current_location_id ? new Date().toISOString().split('T')[0] : null}, ${imageUrl || null}
 				)
-				RETURNING id
 			`;
-
-			const machineId = rows[0].id;
-			let imageUrl = null;
-
-			// Handle image upload if provided
-			if (imageFile && imageFile instanceof File && imageFile.size > 0) {
-				try {
-					imageUrl = await uploadImage(imageFile, 'machines', machineId);
-					
-					// Update the machine with the image URL
-					await sql`
-						UPDATE machines 
-						SET image_url = ${imageUrl}
-						WHERE id = ${machineId}
-					`;
-				} catch (imageError) {
-					console.error('Error uploading image:', imageError);
-					// Don't fail the entire operation if image upload fails
-				}
-			}
 
 			return { success: true, message: 'Machine created successfully' };
 		} catch (error) {
@@ -104,7 +83,7 @@ export const actions = {
 		const year_manufactured = data.get('year_manufactured');
 		const machine_type = data.get('machine_type');
 		const status = data.get('status');
-		const imageFile = data.get('image');
+		const newImageUrl = data.get('image_url'); // New image URL from client-side upload
 		const description = data.get('description');
 		const initial_cost = data.get('initial_cost');
 		const purchase_date = data.get('purchase_date');
@@ -112,13 +91,6 @@ export const actions = {
 		const visible_on_site = data.get('visible_on_site') === 'on';
 		const display_order = data.get('display_order');
 		const notes = data.get('notes');
-
-		console.log('Update request data:', {
-			id,
-			name,
-			imageFile: imageFile instanceof File ? `File: ${imageFile.name}` : imageFile,
-			current_location_id
-		});
 
 		if (!id || !name) {
 			return fail(400, { error: 'Machine ID and name are required' });
@@ -138,32 +110,19 @@ export const actions = {
 			let imageUrl = currentMachine[0]?.image_url;
 			const currentLocationStartDate = currentMachine[0]?.location_start_date;
 
-			// Handle image upload if a new image is provided
-			if (imageFile && imageFile instanceof File && imageFile.size > 0) {
-				try {
-					console.log('Uploading new image for machine:', id);
-					// Delete old image if it exists
-					if (imageUrl) {
+			// Handle new image URL if provided
+			if (newImageUrl && newImageUrl !== imageUrl) {
+				// Delete old image if it exists and is different
+				if (imageUrl) {
+					try {
 						await deleteImage(imageUrl);
+					} catch (deleteError) {
+						console.error('Error deleting old image:', deleteError);
+						// Don't fail the operation if old image cleanup fails
 					}
-					
-					// Upload new image
-					imageUrl = await uploadImage(imageFile, 'machines', id);
-					console.log('Image uploaded successfully:', imageUrl);
-				} catch (imageError) {
-					console.error('Error handling image:', imageError);
-					return fail(500, { error: `Image upload failed: ${imageError.message}` });
 				}
+				imageUrl = newImageUrl;
 			}
-
-			console.log('Updating machine with data:', {
-				name,
-				manufacturer,
-				machine_type,
-				status,
-				imageUrl,
-				current_location_id
-			});
 
 			await sql`
 				UPDATE machines SET
@@ -185,11 +144,11 @@ export const actions = {
 				WHERE id = ${id}
 			`;
 
-			console.log('Machine updated successfully');
 			return { success: true, message: 'Machine updated successfully' };
 		} catch (error) {
 			console.error('Error updating machine:', error);
-			return fail(500, { error: `Failed to update machine: ${error.message}` });
+			const errorMessage = error instanceof Error ? error.message : 'Failed to update machine';
+			return fail(500, { error: errorMessage });
 		}
 	},
 

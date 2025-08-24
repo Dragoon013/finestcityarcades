@@ -1,7 +1,8 @@
-import { put, del } from '@vercel/blob';
+import { upload } from '@vercel/blob/client';
+import { del } from '@vercel/blob';
 
 /**
- * Upload a single image to Vercel Blob storage
+ * Upload a single image to Vercel Blob storage using client-side upload
  * @param {File} file - The image file to upload
  * @param {string} folder - The folder to store the image in (e.g., 'machines', 'locations')
  * @param {string} id - The ID of the machine or location
@@ -14,9 +15,10 @@ export async function uploadImage(file, folder, id) {
 		const extension = file.name.split('.').pop();
 		const filename = `${folder}/${id}/${timestamp}.${extension}`;
 		
-		// Upload to Vercel Blob
-		const blob = await put(filename, file, {
+		// Upload directly to Vercel Blob from client (bypasses serverless function limits)
+		const blob = await upload(filename, file, {
 			access: 'public',
+			handleUploadUrl: '/api/blob/upload', // We'll need to create this endpoint
 		});
 		
 		return blob.url;
@@ -27,7 +29,7 @@ export async function uploadImage(file, folder, id) {
 }
 
 /**
- * Upload multiple images to Vercel Blob storage
+ * Upload multiple images to Vercel Blob storage using client-side upload
  * @param {FileList} files - The image files to upload
  * @param {string} folder - The folder to store the images in
  * @param {string} id - The ID of the location
@@ -40,8 +42,9 @@ export async function uploadMultipleImages(files, folder, id) {
 			const extension = file.name.split('.').pop();
 			const filename = `${folder}/${id}/${timestamp}_${index}.${extension}`;
 			
-			const blob = await put(filename, file, {
+			const blob = await upload(filename, file, {
 				access: 'public',
+				handleUploadUrl: '/api/blob/upload',
 			});
 			
 			return {
