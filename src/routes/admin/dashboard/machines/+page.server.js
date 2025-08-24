@@ -45,7 +45,8 @@ export const actions = {
 		const purchase_date = data.get('purchase_date');
 		const current_location_id = data.get('current_location_id');
 		const visible_on_site = data.get('visible_on_site') === 'on';
-		const featured = data.get('featured') === 'on';
+		const display_order = data.get('display_order');
+		const notes = data.get('notes');
 
 		if (!name) {
 			return fail(400, { error: 'Machine name is required' });
@@ -57,12 +58,12 @@ export const actions = {
 				INSERT INTO machines (
 					name, manufacturer, year_manufactured, machine_type, status, 
 					description, initial_cost, purchase_date, current_location_id,
-					visible_on_site, featured, location_start_date
+					visible_on_site, display_order, notes, location_start_date
 				)
 				VALUES (
 					${name}, ${manufacturer}, ${year_manufactured || null}, ${machine_type}, ${status},
 					${description}, ${initial_cost || null}, ${purchase_date || null}, 
-					${current_location_id || null}, ${visible_on_site}, ${featured},
+					${current_location_id || null}, ${visible_on_site}, ${display_order || 0}, ${notes},
 					${current_location_id ? new Date().toISOString().split('T')[0] : null}
 				)
 				RETURNING id
@@ -109,7 +110,8 @@ export const actions = {
 		const purchase_date = data.get('purchase_date');
 		const current_location_id = data.get('current_location_id');
 		const visible_on_site = data.get('visible_on_site') === 'on';
-		const featured = data.get('featured') === 'on';
+		const display_order = data.get('display_order');
+		const notes = data.get('notes');
 
 		console.log('Update request data:', {
 			id,
@@ -176,7 +178,8 @@ export const actions = {
 					purchase_date = ${purchase_date || null},
 					current_location_id = ${current_location_id || null},
 					visible_on_site = ${visible_on_site},
-					featured = ${featured},
+					display_order = ${display_order || 0},
+					notes = ${notes},
 					location_start_date = ${locationChanged && current_location_id ? new Date().toISOString().split('T')[0] : currentLocationStartDate},
 					updated_at = CURRENT_TIMESTAMP
 				WHERE id = ${id}

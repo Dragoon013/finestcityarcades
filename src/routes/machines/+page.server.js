@@ -1,12 +1,9 @@
 import { sql } from '@vercel/postgres';
-import { initializeDatabase } from '$lib/db/schema.js';
 
 export async function load() {
 	const startTime = Date.now();
 
 	try {
-		// Initialize database if needed
-		await initializeDatabase();
 
 		// Get machines that are visible on the public site
 		const { rows: machines } = await sql`

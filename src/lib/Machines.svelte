@@ -2,7 +2,7 @@
 	let cart = [];
 	let isModalOpen = false;
 	/**
-	 * @type {{id: string, name: string, status: string, image: string, createdAt: string}[]}
+	 * @type {{id: string, name: string, status: string, image_url: string, description: string, createdAt: string}[]}
 	 */
 	export let machines;
 	/**
@@ -29,10 +29,10 @@
 >
 	{#each machines as machine (machine.id)}
 		<div class="card overflow-hidden min-w-32 bg-base-100 shadow-lg">
-			<figure><img src={machine.image} alt={machine.name} /></figure>
+			<figure><img src={machine.image_url} alt={machine.name} /></figure>
 			<div class="card-body">
 				<h2 class="card-title">{machine.name}</h2>
-				<p>This is a description about a pinball machine</p>
+				<p>{machine.description || 'No description available'}</p>
 				<div class="card-actions justify-end">
 				</div>
 			</div>

@@ -16,6 +16,42 @@
 	let imagePreview = null;
 	let imageError = null;
 
+	// Filter and sort variables
+	let filterType = '';
+	let filterLocation = '';
+	let filterStatus = '';
+	let filterVisibility = '';
+	let sortAlphabetically = false;
+
+	// Filtered and sorted machines
+	$: filteredMachines = data.machines
+		.filter(machine => {
+			if (filterType && machine.machine_type !== filterType) return false;
+			if (filterLocation && machine.current_location_id?.toString() !== filterLocation) return false;
+			if (filterStatus && machine.status !== filterStatus) return false;
+			if (filterVisibility !== '' && machine.visible_on_site?.toString() !== filterVisibility) return false;
+			return true;
+		})
+		.sort((a, b) => {
+			if (sortAlphabetically) {
+				return a.name.localeCompare(b.name);
+			}
+			// Default sort by created_at DESC (newest first)
+			return new Date(b.created_at) - new Date(a.created_at);
+		});
+
+	// Get unique values for filter options
+	$: uniqueTypes = [...new Set(data.machines.map(m => m.machine_type).filter(Boolean))];
+	$: uniqueStatuses = [...new Set(data.machines.map(m => m.status).filter(Boolean))];
+
+	function clearFilters() {
+		filterType = '';
+		filterLocation = '';
+		filterStatus = '';
+		filterVisibility = '';
+		sortAlphabetically = false;
+	}
+
 	function toggleAddForm() {
 		showAddForm = !showAddForm;
 		editingMachine = null;
@@ -242,6 +278,33 @@
 							<option value="sold">Sold</option>
 						</select>
 					</div>
+
+					<div>
+						<label for="display_order" class="block text-sm font-medium text-gray-700">Display Order</label>
+						<input
+							type="number"
+							id="display_order"
+							name="display_order"
+							value={editingMachine?.display_order || 0}
+							min="0"
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						/>
+						<p class="mt-1 text-xs text-gray-500">Lower numbers appear first on the public site</p>
+					</div>
+				</div>
+
+				<!-- Visibility Toggle -->
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						id="visible_on_site"
+						name="visible_on_site"
+						checked={editingMachine?.visible_on_site ?? true}
+						class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+					/>
+					<label for="visible_on_site" class="ml-2 block text-sm text-gray-900">
+						Show this machine on the public website
+					</label>
 				</div>
 
 				<!-- Image Upload Section -->
@@ -285,14 +348,29 @@
 				</div>
 
 				<div>
-					<label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+					<label for="description" class="block text-sm font-medium text-gray-700">Public Description</label>
+					<textarea
+						id="description"
+						name="description"
+						rows="3"
+						value={editingMachine?.description || ''}
+						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						placeholder="Enter a description that will be shown on the public website..."
+					></textarea>
+					<p class="mt-1 text-xs text-gray-500">This description will be displayed on the public machines page</p>
+				</div>
+
+				<div>
+					<label for="notes" class="block text-sm font-medium text-gray-700">Internal Notes</label>
 					<textarea
 						id="notes"
 						name="notes"
 						rows="3"
 						value={editingMachine?.notes || ''}
 						class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						placeholder="Internal notes for admin use only..."
 					></textarea>
+					<p class="mt-1 text-xs text-gray-500">These notes are for internal use and won't be shown publicly</p>
 				</div>
 
 				<div class="flex justify-end space-x-3">
@@ -315,11 +393,91 @@
 		</div>
 	{/if}
 
+	<!-- Filter Controls -->
+	<div class="bg-white shadow rounded-lg p-4 mb-6">
+		<div class="flex flex-wrap items-center gap-4">
+			<div class="flex items-center space-x-2">
+				<label for="filterType" class="text-sm font-medium text-gray-700">Type:</label>
+				<select
+					id="filterType"
+					bind:value={filterType}
+					class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+				>
+					<option value="">All Types</option>
+					{#each uniqueTypes as type}
+						<option value={type}>{type}</option>
+					{/each}
+				</select>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<label for="filterLocation" class="text-sm font-medium text-gray-700">Location:</label>
+				<select
+					id="filterLocation"
+					bind:value={filterLocation}
+					class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+				>
+					<option value="">All Locations</option>
+					<option value="">Warehouse</option>
+					{#each data.locations as location}
+						<option value={location.id.toString()}>{location.name}</option>
+					{/each}
+				</select>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<label for="filterStatus" class="text-sm font-medium text-gray-700">Status:</label>
+				<select
+					id="filterStatus"
+					bind:value={filterStatus}
+					class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+				>
+					<option value="">All Statuses</option>
+					{#each uniqueStatuses as status}
+						<option value={status}>{status}</option>
+					{/each}
+				</select>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<label for="filterVisibility" class="text-sm font-medium text-gray-700">Visibility:</label>
+				<select
+					id="filterVisibility"
+					bind:value={filterVisibility}
+					class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+				>
+					<option value="">All</option>
+					<option value="true">Visible</option>
+					<option value="false">Hidden</option>
+				</select>
+			</div>
+
+			<div class="flex items-center space-x-2">
+				<label for="sortAlphabetically" class="text-sm font-medium text-gray-700">
+					<input
+						type="checkbox"
+						id="sortAlphabetically"
+						bind:checked={sortAlphabetically}
+						class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+					/>
+					Sort A-Z
+				</label>
+			</div>
+
+			<button
+				on:click={clearFilters}
+				class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md"
+			>
+				Clear Filters
+			</button>
+		</div>
+	</div>
+
 	<!-- Machines Table -->
 	<div class="bg-white shadow rounded-lg overflow-hidden">
 		<div class="px-4 py-5 sm:p-6">
 			<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-				All Machines ({data.machines.length})
+				Machines ({filteredMachines.length} of {data.machines.length})
 			</h3>
 			
 			{#if data.machines.length === 0}
@@ -347,6 +505,9 @@
 									Status
 								</th>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Visibility
+								</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 									Cost
 								</th>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -358,7 +519,7 @@
 							</tr>
 						</thead>
 						<tbody class="bg-white divide-y divide-gray-200">
-							{#each data.machines as machine}
+							{#each filteredMachines as machine}
 								<tr>
 									<td class="px-6 py-4 whitespace-nowrap">
 										{#if machine.image_url}
@@ -394,6 +555,12 @@
 											 machine.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
 											 'bg-gray-100 text-gray-800'}">
 											{machine.status}
+										</span>
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap">
+										<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+											{machine.visible_on_site ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+											{machine.visible_on_site ? 'Visible' : 'Hidden'}
 										</span>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
