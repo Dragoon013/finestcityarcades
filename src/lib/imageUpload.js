@@ -85,7 +85,7 @@ export function validateImageFile(file) {
 	}
 	
 	if (file.size > maxSize) {
-		throw new Error('File too large. Please upload images smaller than 10MB.');
+		throw new Error('File too large. Please upload images smaller than 15MB.');
 	}
 	
 	return true;

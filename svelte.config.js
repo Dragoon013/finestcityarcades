@@ -9,6 +9,10 @@ const config = {
 		}),
 		csrf: {
 			checkOrigin: false
+		},
+		// Increase body size limit for file uploads (20MB)
+		bodySize: {
+			max: 20 * 1024 * 1024
 		}
 	},
 
