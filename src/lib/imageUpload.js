@@ -78,14 +78,14 @@ export async function deleteImage(url) {
  */
 export function validateImageFile(file) {
 	const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-	const maxSize = 5 * 1024 * 1024; // 5MB
+	const maxSize = 10 * 1024 * 1024; // 10MB
 	
 	if (!allowedTypes.includes(file.type)) {
 		throw new Error('Invalid file type. Please upload JPEG, PNG, or WebP images.');
 	}
 	
 	if (file.size > maxSize) {
-		throw new Error('File too large. Please upload images smaller than 5MB.');
+		throw new Error('File too large. Please upload images smaller than 10MB.');
 	}
 	
 	return true;
