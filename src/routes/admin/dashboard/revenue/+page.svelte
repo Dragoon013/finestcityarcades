@@ -8,6 +8,7 @@
 
 	let selectedLocation = '';
 	let selectedMonth = data.currentMonth;
+	let selectedYear = data.selectedYear || new Date().getFullYear();
 	let machines = [];
 	let loading = false;
 	let activeTab = 'entry'; // 'entry', 'monthly', 'yearly'
@@ -121,6 +122,14 @@
 	function handleInputChange(event, machineId, field) {
 		formValues[`machine_${machineId}_${field}`] = event.target.value;
 	}
+
+	// Load yearly data when year changes
+	async function loadYearlyData() {
+		// This will trigger a page reload with the new year parameter
+		const url = new URL(window.location);
+		url.searchParams.set('year', selectedYear.toString());
+		window.location.href = url.toString();
+	}
 </script>
 
 <svelte:head>
@@ -183,7 +192,7 @@
 							id="location"
 							bind:value={selectedLocation}
 							on:change={loadMachines}
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white text-gray-900"
 						>
 							<option value="">Select a location...</option>
 							{#each data.locations as location}
@@ -198,7 +207,7 @@
 							id="month"
 							bind:value={selectedMonth}
 							on:change={loadMachines}
-							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+							class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white text-gray-900"
 						/>
 					</div>
 				</div>
@@ -381,10 +390,32 @@
 	{:else if activeTab === 'yearly'}
 		<!-- Yearly Overview -->
 		<div class="space-y-6">
+			<!-- Year Selection -->
+			<div class="bg-white shadow rounded-lg">
+				<div class="px-4 py-5 sm:p-6">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg leading-6 font-medium text-gray-900">Yearly Overview</h3>
+						<div class="flex items-center space-x-2">
+							<label for="year-select" class="text-sm font-medium text-gray-700">Year:</label>
+							<select
+								id="year-select"
+								bind:value={selectedYear}
+								on:change={loadYearlyData}
+								class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white text-gray-900"
+							>
+								{#each Array.from({length: 5}, (_, i) => new Date().getFullYear() - i) as year}
+									<option value={year}>{year}</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<!-- Top 5 Machines -->
 			<div class="bg-white shadow rounded-lg">
 				<div class="px-4 py-5 sm:p-6">
-					<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Top 5 Earning Machines This Year</h3>
+					<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Top 5 Earning Machines {selectedYear}</h3>
 					
 					{#if data.topMachines.length > 0}
 						<div class="space-y-3">
@@ -417,7 +448,7 @@
 			<!-- Location Performance -->
 			<div class="bg-white shadow rounded-lg">
 				<div class="px-4 py-5 sm:p-6">
-					<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Location Performance</h3>
+					<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Location Performance {selectedYear}</h3>
 					
 					{#if data.locationSummary.length > 0}
 						<div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -425,8 +456,11 @@
 								<thead class="bg-gray-50">
 									<tr>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Location</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Owner</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Machines</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Total Revenue</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">FCA Total</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Owner Total</th>
 										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Avg per Machine</th>
 									</tr>
 								</thead>
@@ -437,10 +471,19 @@
 												{location.location_name}
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+												{location.contact_name || 'N/A'}
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 												{location.machine_count}
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 												{formatCurrency(location.total_revenue)}
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{formatCurrency(location.total_fca)}
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{formatCurrency(location.total_location_amount)}
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 												{formatCurrency(location.avg_revenue)}
@@ -448,6 +491,21 @@
 										</tr>
 									{/each}
 								</tbody>
+								<tfoot class="bg-gray-50">
+									<tr>
+										<td colspan="3" class="px-6 py-3 text-sm font-medium text-gray-900">Totals:</td>
+										<td class="px-6 py-3 text-sm font-medium text-gray-900">
+											{formatCurrency(data.locationSummary.reduce((sum, loc) => sum + (loc.total_revenue || 0), 0))}
+										</td>
+										<td class="px-6 py-3 text-sm font-medium text-gray-900">
+											{formatCurrency(data.locationSummary.reduce((sum, loc) => sum + (loc.total_fca || 0), 0))}
+										</td>
+										<td class="px-6 py-3 text-sm font-medium text-gray-900">
+											{formatCurrency(data.locationSummary.reduce((sum, loc) => sum + (loc.total_location_amount || 0), 0))}
+										</td>
+										<td class="px-6 py-3"></td>
+									</tr>
+								</tfoot>
 							</table>
 						</div>
 					{:else}

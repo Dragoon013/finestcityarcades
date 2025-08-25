@@ -79,12 +79,15 @@ export async function initializeDatabase() {
 				machine_id INTEGER NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
 				location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
 				revenue_month DATE NOT NULL, -- First day of the month
+				revenue_date DATE NOT NULL, -- Specific date of revenue entry
 				revenue_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+				fca_amount DECIMAL(10,2) DEFAULT 0,
+				location_amount DECIMAL(10,2) DEFAULT 0,
 				plays_count INTEGER DEFAULT 0,
 				notes TEXT,
 				created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 				updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-				UNIQUE(machine_id, location_id, revenue_month)
+				UNIQUE(machine_id, location_id, revenue_date)
 			);
 		`;
 
@@ -122,6 +125,7 @@ export async function initializeDatabase() {
 		await sql`CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);`;
 		await sql`CREATE INDEX IF NOT EXISTS idx_machines_visible ON machines(visible_on_site);`;
 		await sql`CREATE INDEX IF NOT EXISTS idx_revenue_month ON machine_revenue(revenue_month);`;
+		await sql`CREATE INDEX IF NOT EXISTS idx_revenue_date ON machine_revenue(revenue_date);`;
 		await sql`CREATE INDEX IF NOT EXISTS idx_revenue_machine ON machine_revenue(machine_id);`;
 		await sql`CREATE INDEX IF NOT EXISTS idx_revenue_location ON machine_revenue(location_id);`;
 

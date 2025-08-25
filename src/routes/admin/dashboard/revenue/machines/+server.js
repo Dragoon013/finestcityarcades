@@ -16,19 +16,44 @@ export async function POST({ request }) {
 				m.id,
 				m.name,
 				m.machine_type,
-				COALESCE(mr.revenue_date, ${revenueMonth + '-01'}) as current_date,
-				COALESCE(mr.revenue_amount, 0) as current_revenue,
-				COALESCE(mr.fca_amount, 0) as current_fca,
-				COALESCE(mr.location_amount, 0) as current_location_amount,
-				COALESCE(mr.notes, '') as current_notes,
+				COALESCE(
+					(SELECT revenue_date FROM machine_revenue 
+					 WHERE machine_id = m.id AND location_id = ${locationId} 
+					 AND DATE_TRUNC('month', revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
+					 ORDER BY revenue_date DESC LIMIT 1), 
+					${revenueMonth + '-01'}
+				) as current_date,
+				COALESCE(
+					(SELECT revenue_amount FROM machine_revenue 
+					 WHERE machine_id = m.id AND location_id = ${locationId} 
+					 AND DATE_TRUNC('month', revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
+					 ORDER BY revenue_date DESC LIMIT 1), 
+					0
+				) as current_revenue,
+				COALESCE(
+					(SELECT fca_amount FROM machine_revenue 
+					 WHERE machine_id = m.id AND location_id = ${locationId} 
+					 AND DATE_TRUNC('month', revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
+					 ORDER BY revenue_date DESC LIMIT 1), 
+					0
+				) as current_fca,
+				COALESCE(
+					(SELECT location_amount FROM machine_revenue 
+					 WHERE machine_id = m.id AND location_id = ${locationId} 
+					 AND DATE_TRUNC('month', revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
+					 ORDER BY revenue_date DESC LIMIT 1), 
+					0
+				) as current_location_amount,
+				COALESCE(
+					(SELECT notes FROM machine_revenue 
+					 WHERE machine_id = m.id AND location_id = ${locationId} 
+					 AND DATE_TRUNC('month', revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
+					 ORDER BY revenue_date DESC LIMIT 1), 
+					''
+				) as current_notes,
 				l.revenue_split,
 				l.contact_name
 			FROM machines m
-			LEFT JOIN machine_revenue mr ON (
-				m.id = mr.machine_id
-				AND mr.location_id = ${locationId}
-				AND DATE_TRUNC('month', mr.revenue_date) = DATE_TRUNC('month', ${revenueMonth + '-01'}::date)
-			)
 			JOIN locations l ON m.current_location_id = l.id
 			WHERE m.current_location_id = ${locationId}
 				AND (m.sale_date IS NULL OR m.sale_date >= ${revenueMonth + '-01'}::date)

@@ -1,8 +1,11 @@
 import { sql } from '@vercel/postgres';
 import { fail } from '@sveltejs/kit';
 
-export async function load() {
+export async function load({ url }) {
 	try {
+		// Get year from URL parameter, default to current year
+		const selectedYear = parseInt(url.searchParams.get('year') || new Date().getFullYear().toString());
+
 		// Get all active locations
 		const { rows: locations } = await sql`
 			SELECT id, name FROM locations WHERE active = true ORDER BY name
@@ -32,19 +35,19 @@ export async function load() {
 			ORDER BY l.name, m.name
 		`;
 
-		// Get yearly revenue summary
+		// Get yearly revenue summary for selected year
 		const { rows: yearlyRevenue } = await sql`
 			SELECT 
 				DATE_TRUNC('month', revenue_month) as month,
 				SUM(revenue_amount) as total_revenue,
 				SUM(plays_count) as total_plays
 			FROM machine_revenue
-			WHERE EXTRACT(YEAR FROM revenue_month) = EXTRACT(YEAR FROM CURRENT_DATE)
+			WHERE EXTRACT(YEAR FROM revenue_month) = ${selectedYear}
 			GROUP BY DATE_TRUNC('month', revenue_month)
 			ORDER BY month
 		`;
 
-		// Get top 5 machines for current year
+		// Get top 5 machines for selected year
 		const { rows: topMachines } = await sql`
 			SELECT 
 				m.name as machine_name,
@@ -54,23 +57,26 @@ export async function load() {
 			FROM machine_revenue mr
 			JOIN machines m ON mr.machine_id = m.id
 			JOIN locations l ON mr.location_id = l.id
-			WHERE EXTRACT(YEAR FROM mr.revenue_month) = EXTRACT(YEAR FROM CURRENT_DATE)
+			WHERE EXTRACT(YEAR FROM mr.revenue_month) = ${selectedYear}
 			GROUP BY m.id, m.name, l.name
 			ORDER BY total_revenue DESC
 			LIMIT 5
 		`;
 
-		// Get location performance summary
+		// Get location performance summary for selected year with FCA and owner totals
 		const { rows: locationSummary } = await sql`
 			SELECT 
 				l.name as location_name,
+				l.contact_name,
 				COUNT(DISTINCT mr.machine_id) as machine_count,
 				SUM(mr.revenue_amount) as total_revenue,
+				SUM(mr.fca_amount) as total_fca,
+				SUM(mr.location_amount) as total_location_amount,
 				AVG(mr.revenue_amount) as avg_revenue
 			FROM machine_revenue mr
 			JOIN locations l ON mr.location_id = l.id
-			WHERE EXTRACT(YEAR FROM mr.revenue_month) = EXTRACT(YEAR FROM CURRENT_DATE)
-			GROUP BY l.id, l.name
+			WHERE EXTRACT(YEAR FROM mr.revenue_month) = ${selectedYear}
+			GROUP BY l.id, l.name, l.contact_name
 			ORDER BY total_revenue DESC
 		`;
 
@@ -80,7 +86,8 @@ export async function load() {
 			currentMonthRevenue,
 			yearlyRevenue,
 			topMachines,
-			locationSummary
+			locationSummary,
+			selectedYear
 		};
 	} catch (error) {
 		console.error('Error loading revenue data:', error);
@@ -91,6 +98,7 @@ export async function load() {
 			yearlyRevenue: [],
 			topMachines: [],
 			locationSummary: [],
+			selectedYear: new Date().getFullYear(),
 			error: 'Failed to load revenue data'
 		};
 	}
@@ -143,6 +151,7 @@ export const actions = {
 					)
 					ON CONFLICT (machine_id, location_id, revenue_date)
 					DO UPDATE SET
+						revenue_month = EXCLUDED.revenue_month,
 						revenue_amount = EXCLUDED.revenue_amount,
 						fca_amount = EXCLUDED.fca_amount,
 						location_amount = EXCLUDED.location_amount,
