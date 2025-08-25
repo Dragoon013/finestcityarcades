@@ -1,0 +1,13 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f3f4f6"/>
+  <rect x="50" y="50" width="300" height="200" rx="10" fill="#e5e7eb" stroke="#d1d5db" stroke-width="2"/>
+  <rect x="80" y="80" width="240" height="140" rx="5" fill="#374151"/>
+  <g transform="translate(180, 130)">
+    <circle cx="0" cy="20" r="15" fill="#6b7280"/>
+    <rect x="-2" y="5" width="4" height="20" fill="#9ca3af"/>
+    <circle cx="0" cy="5" r="6" fill="#ef4444"/>
+    <circle cx="-25" cy="0" r="8" fill="#3b82f6"/>
+    <circle cx="25" cy="0" r="8" fill="#10b981"/>
+  </g>
+  <text x="200" y="270" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="14" font-weight="800">Coming Soon</text>
+</svg>
